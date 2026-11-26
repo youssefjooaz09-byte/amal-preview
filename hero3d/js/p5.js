@@ -1,0 +1,187 @@
+window.AmalExtra5=function(API){
+const {Pages,app,$,$$,LS,AR,esc,norm,loadScript,needQ,toast,crumbs}=API;
+if(window.AmalI18n)window.AmalI18n();
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.getRegistrations().then(r=>r.forEach(x=>{if(x.scope.includes('/hero3d/'))x.unregister()})).catch(()=>{});
+const COLN={bukhari:'صحيح البخاري',muslim:'صحيح مسلم',nawawi:'الأربعون النووية',qudsi:'الأحاديث القدسية',abudawud:'سنن أبي داود',tirmidhi:'جامع الترمذي',nasai:'سنن النسائي',ibnmajah:'سنن ابن ماجه',malik:'موطأ مالك'};
+/* ---------- global search ---------- */
+Pages.search=async(p)=>{const q0=p.get('q')||'';
+ app.innerHTML=crumbs([['البحث']])+`<h2 class="sec">البحث الشامل</h2><div class="card"><div class="toolbar"><input class="field" id="gq" type="search" placeholder="اكتب كلمة للبحث" value="${esc(q0)}" style="flex:1;min-width:200px"><button class="btn gold" id="gb">بحث</button></div>
+ <div class="toolbar"><label><input type="checkbox" id="sq" checked> القرآن</label><label><input type="checkbox" id="sz" checked> الأذكار والأدعية</label><label><input type="checkbox" id="st" checked> التفسير الميسر</label><label><input type="checkbox" id="sqs" checked> قصص الأنبياء (ابن كثير)</label><label><input type="checkbox" id="ssc" checked> سير العلماء</label><label><input type="checkbox" id="sh"> الأحاديث (يمسح ٣٦ ألف حديث، قد يستغرق دقيقة)</label></div>
+ <div class="muted">البحث بدون تشكيل ويتجاهل اختلاف الهمزات. النتائج نصوص منقولة من مصادرها كما هي.</div></div><div id="gr"></div>`;
+ let run=0;
+ const go=async()=>{const v=norm($('#gq').value);const my=++run;const out=$('#gr');if(v.length<2){out.innerHTML='<div class="notice">اكتب حرفين على الأقل.</div>';return}
+  history.replaceState(null,'','search.html?q='+encodeURIComponent($('#gq').value));
+  out.innerHTML='';const sec=(id,t)=>{out.insertAdjacentHTML('beforeend',`<h3 class="sec" id="${id}h">${t} <small class="muted" id="${id}n"></small></h3><div id="${id}"></div>`)};
+  const add=(id,html,n)=>{$('#'+id).insertAdjacentHTML('beforeend',html)};
+  const cnt={};const MAX=30;
+  const hit=(id,html)=>{cnt[id]=(cnt[id]||0)+1;if(cnt[id]<=MAX)add(id,html);$('#'+id+'n').textContent='('+AR(cnt[id])+(cnt[id]>MAX?'، المعروض أول '+AR(MAX):'')+')'};
+  try{
+  if($('#sq').checked){sec('rq','القرآن الكريم');const Q=await needQ();Q.forEach(s=>s.ayahs.forEach((t,i)=>{if(norm(t).includes(v))hit('rq',`<div class="card" style="margin:8px 0"><a href="surah.html?s=${s.n}&a=${i+1}#a${i+1}"><b>سورة ${esc(s.name)} · آية ${AR(i+1)}</b></a><div style="font-family:Amiri;font-size:1.3rem;line-height:2">${esc(t)}</div></div>`)}));if(!cnt.rq)$('#rq').innerHTML='<div class="muted">لا نتائج.</div>'}
+  if($('#sz').checked){sec('rz','الأذكار والأدعية (حصن المسلم)');const A=await loadScript('data/adhkar.js','ADHKAR');A.forEach(c=>c.items.forEach(it=>{if(norm(it.t).includes(v))hit('rz',`<div class="card" style="margin:8px 0"><a href="azkar.html?c=${c.id}"><b>${esc(c.cat)}</b></a><div style="font-family:Amiri;font-size:1.2rem;line-height:2">${esc(it.t)}</div></div>`)}));if(!cnt.rz)$('#rz').innerHTML='<div class="muted">لا نتائج.</div>'}
+  if($('#st').checked){sec('rt','التفسير الميسر');const Q=await needQ(),T=await loadScript('data/tafsir-muyassar.js','TAFSIR_MUYASSAR');T.forEach((arr,si)=>arr.forEach((t,i)=>{if(norm(t).includes(v))hit('rt',`<div class="card" style="margin:8px 0"><a href="tafsir.html?s=${si+1}"><b>تفسير سورة ${esc(Q[si].name)} · آية ${AR(i+1)}</b></a><div>${esc(t.slice(0,300))}${t.length>300?'…':''}</div></div>`)}));if(!cnt.rt)$('#rt').innerHTML='<div class="muted">لا نتائج.</div>'}
+  if($('#sqs').checked){sec('rs','قصص الأنبياء (ابن كثير)');const QQ=await loadScript('data/qisas.js','QISAS');const LL=[];QQ.forEach(pt=>pt.secs.forEach(sc=>LL.push(sc)));LL.forEach((sc,k)=>sc.p.forEach(t=>{const nt=norm(t),i=nt.indexOf(v);if(i>=0)hit('rs',`<div class="card" style="margin:8px 0"><a href="qisas.html?i=${k}"><b>${esc(sc.t)}</b></a><div style="font-family:Amiri;font-size:1.15rem;line-height:2">${esc(t.length>300?t.slice(0,300)+'…':t)}</div></div>`)}));if(!cnt.rs)$('#rs').innerHTML='<div class="muted">لا نتائج.</div>'}
+  if($('#ssc').checked){sec('rc2','سير العلماء (المقتطفات المعروضة في الموقع)');const SC=await loadScript('data/scholars.js','SCHOLARS');SC.forEach(s=>{if(s.excerpt.some(t=>norm(t).includes(v)))hit('rc2',`<div class="card" style="margin:8px 0"><a href="scholars.html"><b>${esc(s.name)}</b></a></div>`)});if(!cnt.rc2)$('#rc2').innerHTML='<div class="muted">لا نتائج.</div>'}
+  if($('#sh').checked){sec('rh','الأحاديث');const HI=await loadScript('data/hadith-index.js','HINDEX');const st=$('#rh');st.insertAdjacentHTML('beforebegin','<div class="muted" id="hp"></div>');let done=0,tot=0;Object.values(HI).forEach(a=>tot+=a.length);
+   for(const c of Object.keys(HI)){for(const b of HI[c]){if(my!==run)return;let ch;try{ch=await loadScript(`data/hadith/${c}-${b.b}.js`,`H_${c}_${b.b}`)}catch(e){continue}
+     ch.forEach(h=>{if(norm(h[1]).includes(v))hit('rh',`<div class="card" style="margin:8px 0"><a href="hadith.html?c=${c}&b=${b.b}"><b>${COLN[c]||c} · حديث رقم ${AR(h[0])}</b></a><div style="font-family:Amiri;font-size:1.2rem;line-height:2">${esc(h[1].slice(0,400))}${h[1].length>400?'…':''}</div></div>`)});
+     done++;if(done%10===0){$('#hp').textContent='جارٍ البحث في الأحاديث… '+AR(Math.round(done/tot*100))+'٪';await new Promise(r=>setTimeout(r))}}}
+   $('#hp').textContent='انتهى البحث في الأحاديث.';if(!cnt.rh)$('#rh').innerHTML='<div class="muted">لا نتائج.</div>'}
+  }catch(e){out.insertAdjacentHTML('beforeend','<div class="notice">تعذر إكمال البحث: '+esc(e.message||'خطأ')+'</div>')}};
+ $('#gb').onclick=go;$('#gq').onkeydown=e=>{if(e.key==='Enter')go()};if(q0)go()};
+const qi=document.getElementById('q');if(qi&&!qi.dataset.p5){qi.dataset.p5=1;qi.addEventListener('keydown',e=>{if(e.key==='Enter'&&qi.value.trim().length>1){API.route('search.html?q='+encodeURIComponent(qi.value),true);document.getElementById('sres').style.display='none'}})}
+/* ---------- prayer times ---------- */
+const h12=s=>{const m=/(\d{1,2}):(\d{2})/.exec(s||'');if(!m)return s;let h=+m[1];const sf=h>=12?'م':'ص';h=h%12||12;return h+':'+m[2]+' '+sf};window.h12=h12;
+const PM=[['Fajr','الفجر'],['Sunrise','الشروق'],['Dhuhr','الظهر'],['Asr','العصر'],['Maghrib','المغرب'],['Isha','العشاء']];
+const METHODS=[[5,'الهيئة المصرية العامة للمساحة'],[4,'جامعة أم القرى، مكة'],[2,'الجمعية الإسلامية لأمريكا الشمالية (ISNA)'],[3,'رابطة العالم الإسلامي'],[1,'جامعة العلوم الإسلامية، كراتشي']];
+const CITIES=[['القاهرة',30.0444,31.2357],['الإسكندرية',31.2001,29.9187],['مكة المكرمة',21.3891,39.8579],['المدينة المنورة',24.5247,39.5692],['الرياض',24.7136,46.6753],['إسطنبول',41.0082,28.9784],['لندن',51.5072,-0.1276]];
+Pages.salah=async()=>{let loc=LS.get('loc',{n:'القاهرة',lat:30.0444,lon:31.2357}),meth=LS.get('pmeth',5);
+ app.innerHTML=crumbs([['مواقيت الصلاة']])+`<h2 class="sec">مواقيت الصلاة</h2><div class="notice">المواقيت من واجهة AlAdhan البرمجية (api.aladhan.com) حسب الإحداثيات وطريقة الحساب المختارة. هي مرجع عام وقد تختلف دقائق عن تقويم مسجدك المحلي؛ اعتمد على الجهة الرسمية في بلدك.</div>
+ <div class="card"><div class="toolbar"><select class="field" id="sc">${CITIES.map((c,i)=>`<option value="${i}">${c[0]}</option>`).join('')}<option value="gps">موقعي الحالي</option></select><select class="field" id="sm">${METHODS.map(m=>`<option value="${m[0]}" ${m[0]===meth?'selected':''}>${m[1]}</option>`).join('')}</select></div><div id="pt" class="muted">جارٍ التحميل…</div></div>`;
+ const sel=$('#sc');const ci=CITIES.findIndex(c=>c[0]===loc.n);sel.value=ci>=0?ci:'gps';
+ const load=async()=>{const t=$('#pt');t.textContent='جارٍ التحميل…';try{const d=new Date(),ds=`${d.getDate()}-${d.getMonth()+1}-${d.getFullYear()}`;const r=await fetch(`https://api.aladhan.com/v1/timings/${ds}?latitude=${loc.lat}&longitude=${loc.lon}&method=${meth}`);if(!r.ok)throw new Error('http '+r.status);const j=await r.json();const T=j.data.timings,H=j.data.date.hijri;
+  t.innerHTML=`<div style="margin:6px 0"><b>${esc(loc.n)}</b> · ${esc(j.data.date.readable)} · ${AR(H.day)} ${esc(H.month.ar)} ${AR(H.year)}هـ · التوقيت: ${esc(j.data.meta.timezone)}</div><div class="tiles" style="grid-template-columns:repeat(3,1fr)">${PM.map(m=>`<div class="card" style="text-align:center"><div>${m[1]}</div><div style="font-size:1.6rem">${AR(h12(T[m[0]]))}</div></div>`).join('')}</div>`}catch(e){t.innerHTML='<div class="notice">تعذر جلب المواقيت (تحقق من الاتصال بالإنترنت): '+esc(e.message)+'</div>'}};
+ sel.onchange=()=>{if(sel.value==='gps'){if(!navigator.geolocation){toast('المتصفح لا يدعم تحديد الموقع');return}navigator.geolocation.getCurrentPosition(p=>{loc={n:'موقعي الحالي',lat:+p.coords.latitude.toFixed(4),lon:+p.coords.longitude.toFixed(4)};LS.set('loc',loc);load()},e=>{toast('تعذر تحديد الموقع: '+e.message)})}else{const c=CITIES[+sel.value];loc={n:c[0],lat:c[1],lon:c[2]};LS.set('loc',loc);load()}};
+ $('#sm').onchange=e=>{meth=+e.target.value;LS.set('pmeth',meth);load()};load()};
+/* ---------- hijri calendar ---------- */
+Pages.hijri=async()=>{const f=(d,o)=>new Intl.DateTimeFormat('ar-EG-u-ca-islamic-umalqura-nu-arab',o).format(d);const now=new Date();let y=now.getFullYear(),m=now.getMonth();
+ const draw=()=>{const first=new Date(y,m,1),days=new Date(y,m+1,0).getDate();let cells='';for(let i=0;i<first.getDay();i++)cells+='<div></div>';for(let d=1;d<=days;d++){const dt=new Date(y,m,d,12);const isT=dt.toDateString()===now.toDateString();cells+=`<div class="card" style="text-align:center;padding:8px;${isT?'outline:2px solid var(--gold2)':''}"><div>${AR(d)}</div><small class="muted">${f(dt,{day:'numeric'})} ${f(dt,{month:'short'})}</small></div>`}
+  $('#hc').innerHTML=`<div class="toolbar"><button class="btn" id="hp">‹</button><b>${new Intl.DateTimeFormat('ar-EG',{month:'long',year:'numeric'}).format(first)}</b><button class="btn" id="hn">›</button></div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center" class="muted"><div>أحد</div><div>اثنين</div><div>ثلاثاء</div><div>أربعاء</div><div>خميس</div><div>جمعة</div><div>سبت</div></div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">${cells}</div>`;
+  $('#hp').onclick=()=>{m--;if(m<0){m=11;y--}draw()};$('#hn').onclick=()=>{m++;if(m>11){m=0;y++}draw()}};
+ app.innerHTML=crumbs([['التقويم الهجري']])+`<h2 class="sec">التقويم الهجري</h2><div class="card" style="text-align:center"><div class="muted">اليوم</div><div style="font-size:1.8rem">${f(now,{day:'numeric',month:'long',year:'numeric'})}</div><div class="muted">${new Intl.DateTimeFormat('ar-EG',{dateStyle:'full'}).format(now)}</div></div><div class="notice">التحويل بتقويم أم القرى عبر واجهة Intl في المتصفح. بدايات الشهور الفعلية تعتمد على رؤية الهلال وقد تختلف يومًا عن هذا الحساب، فتأكد من الجهة الرسمية في بلدك لرمضان والأعياد.</div><div class="card" id="hc"></div>`;draw()};
+/* ---------- favorites ---------- */
+Pages.favorites=async()=>{app.innerHTML=crumbs([['المفضلة']])+`<h2 class="sec">المفضلة</h2><div id="fv">جارٍ التحميل…</div>`;
+ const Q=await needQ(),bm=LS.get('bm',[]),fh=LS.get('favh',[]),fz=LS.get('favz',[]),fr=LS.get('favrec',null);let h='';
+ h+=`<h3 class="sec">آيات محفوظة (${AR(bm.length)})</h3>`+(bm.length?bm.map(k=>{const[s,a]=k.split(':').map(Number),S=Q[s-1];if(!S)return'';return`<div class="card" style="margin:8px 0"><a href="surah.html?s=${s}&a=${a}#a${a}"><b>سورة ${esc(S.name)} · آية ${AR(a)}</b></a><div style="font-family:Amiri;font-size:1.3rem;line-height:2">${esc(S.ayahs[a-1]||'')}</div></div>`}).join(''):'<div class="muted">لا شيء بعد. افتح سورة واضغط على آية ثم «علامة».</div>');
+ let hh='';for(const k of fh){const[c,b,n]=k.split(':');try{const ch=await loadScript(`data/hadith/${c}-${b}.js`,`H_${c}_${b}`);const x=ch.find(z=>String(z[0])===n);if(x)hh+=`<div class="card" style="margin:8px 0"><a href="hadith.html?c=${c}&b=${b}"><b>${COLN[c]||c} · حديث رقم ${AR(n)}</b></a><div style="font-family:Amiri;font-size:1.2rem;line-height:2">${esc(x[1])}</div></div>`}catch(e){}}
+ h+=`<h3 class="sec">أحاديث مفضلة (${AR(fh.length)})</h3>`+(hh||'<div class="muted">لا شيء بعد.</div>');
+ let zz='';try{const A=await loadScript('data/adhkar.js','ADHKAR');for(const k of fz){const[ci,i]=k.split('_');const c=A.find(z=>String(z.id)===ci);if(c&&c.items[i])zz+=`<div class="card" style="margin:8px 0"><a href="azkar.html?c=${c.id}"><b>${esc(c.cat)}</b></a><div style="font-family:Amiri;font-size:1.2rem;line-height:2">${esc(c.items[i].t)}</div></div>`}}catch(e){}
+ h+=`<h3 class="sec">أذكار مفضلة (${AR(fz.length)})</h3>`+(zz||'<div class="muted">لا شيء بعد.</div>');
+ if(fr){try{const R=await loadScript('data/reciters.js','RECITERS');const r=(R.list||R).find&&(R.list||R).find(z=>z.key===fr);h+=`<h3 class="sec">القارئ المفضل</h3><div class="card">${esc(r?r.name:fr)}</div>`}catch(e){}}
+ $('#fv').innerHTML=h};
+/* ---------- settings ---------- */
+Pages.settings=async()=>{const R=await loadScript('data/reciters.js','RECITERS').catch(()=>null);const rl=R?(R.list||R):[];
+ app.innerHTML=crumbs([['الإعدادات']])+`<h2 class="sec">الإعدادات</h2><div class="card"><div class="toolbar"><label>المظهر</label><select class="field" id="stm"><option value="dark">داكن</option><option value="light">فاتح</option></select></div>
+ <div class="toolbar"><label>حجم خط المصحف</label><input type="range" id="stf" min="1.2" max="4" step="0.2"><span id="stfv" class="muted"></span></div>
+ <div class="toolbar"><label>القارئ الافتراضي</label><select class="field" id="str">${rl.map(r=>`<option value="${esc(r.key)}">${esc(r.name)}</option>`).join('')}</select></div>
+ <div class="toolbar"><label>طريقة حساب المواقيت</label><select class="field" id="stp">${METHODS.map(m=>`<option value="${m[0]}">${m[1]}</option>`).join('')}</select></div></div>
+ <div class="toolbar"><label>اللغة</label><select class="field" id="stl"><option value="ar">العربية</option><option value="en">English</option></select></div>
+ <div class="card setc"><h3>القراءة والخط</h3>
+ <div class="toolbar"><label>حجم الخط في كل الموقع (الأحاديث والقصص والأذكار...)</label><input type="range" id="ts_z" min="0.9" max="1.4" step="0.05"><span id="ts_zv" class="muted"></span></div>
+ <div class="toolbar"><label>نوع خط النص (القرآن والأحاديث والقصص)</label><select class="field" id="ts_f"><option value="">الافتراضي</option><option value="amiri">أميري</option><option value="sch">شهرزاد الجديد (Scheherazade)</option><option value="naskh">نسخ (Noto Naskh)</option></select></div>
+ <div class="toolbar"><label>تباعد الأسطر</label><select class="field" id="ts_l"><option value="">الافتراضي</option><option value="1.8">ضيّق</option><option value="2.4">متوسط</option><option value="3">واسع</option></select></div>
+ <div class="muted" id="ts_pv" style="font-family:'Amiri',serif;font-size:1.4rem;line-height:2.2;border:1px dashed var(--cardb);border-radius:10px;padding:8px">إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى</div>
+ <div class="toolbar"><label>تقليل الحركة والانتقالات</label><input type="checkbox" id="ts_m"></div>
+ <div class="toolbar"><label>إبقاء الشاشة مضاءة أثناء القراءة أو تشغيل التلاوة (إن دعمه المتصفح)</label><input type="checkbox" id="ts_k"></div></div>
+ <div class="card setc"><h3>التلاوة</h3>
+ <div class="toolbar"><label>الانتقال تلقائيًا إلى السورة التالية عند انتهاء السورة</label><input type="checkbox" id="ts_a"></div>
+ <div class="toolbar"><label>وضع التشغيل الافتراضي</label><select class="field" id="ts_r"><option value="0">متتابع</option><option value="1">تكرار السورة</option><option value="2">تكرار الكل</option></select></div>
+ <div class="toolbar"><label>سرعة التشغيل الافتراضية</label><select class="field" id="ts_s"><option>0.75</option><option>1</option><option>1.25</option><option>1.5</option><option>2</option></select></div></div>
+ <div class="card setc"><h3>التذكيرات</h3><div class="muted">تعمل التذكيرات والموقع أو التطبيق مفتوح فقط (الموقع بلا خادم). التفاصيل الكاملة والحدود في <a href="remind.html">صفحة التذكيرات</a>.</div>
+ <div class="toolbar"><label>تشغيل التذكيرات (الصلاة والصلاة على النبي)</label><input type="checkbox" id="ts_ron"></div>
+ <div class="toolbar"><label>تذكير بأذكار الصباح والمساء</label><input type="checkbox" id="ts_aon"></div>
+ <div class="toolbar"><label>وقت أذكار الصباح</label><input type="time" class="field" id="ts_am"></div>
+ <div class="toolbar"><label>وقت أذكار المساء</label><input type="time" class="field" id="ts_ae"></div>
+ <div class="toolbar"><button class="btn gold" id="ts_perm">السماح بالإشعارات</button><span class="muted" id="ts_ps"></span></div></div>
+ <div class="card setc"><h3>المتابعة</h3>
+ <div class="toolbar"><label>فتح آخر موضع قراءة عند تشغيل الموقع بدل الصفحة الرئيسية</label><input type="checkbox" id="ts_res"></div>
+ <div class="toolbar"><button class="btn" id="ts_forget">نسيان موضع القراءة والتلاوة</button></div></div>
+ <div class="card"><b>العمل بدون إنترنت</b><p class="muted">يحفظ الموقع في متصفحك: الصفحات والقرآن والتفسير الميسر والأذكار والأسماء الحسنى وقصص الأنبياء والأربعون النووية. الأحاديث الكبرى (حوالي ٤٠ ميجا) اختيارية. الصوت وبقية التفاسير والمواقيت والصور تحتاج إنترنت. يعمل عبر Live Server أو أي خادم محلي.</p><button class="btn" id="off1">تنزيل الأساسيات</button> <button class="btn" id="off2">تنزيل كل الأحاديث (٤٠ ميجا)</button> <span class="muted" id="offs"></span></div>
+ <div class="card"><b>بياناتك</b><p class="muted">كل الإعدادات والمفضلة وتقدمك محفوظة في متصفحك فقط (localStorage) ولا تُرسل لأي خادم.</p><button class="btn" id="stx">تصدير بياناتي (ملف JSON)</button> <button class="btn" id="std" style="color:#ff9b9b">مسح كل بياناتي</button></div>`;
+ $('#stm').value=LS.get('theme','dark');$('#stm').onchange=e=>{LS.set('theme',e.target.value);document.body.classList.toggle('light',e.target.value==='light');const b=$('#theme');if(b)b.textContent=e.target.value==='light'?'🌙':'☀️'};
+ $('#stf').value=LS.get('fs',2);$('#stfv').textContent=$('#stf').value;$('#stf').oninput=e=>{LS.set('fs',+e.target.value);$('#stfv').textContent=e.target.value};
+ const cur=LS.get('reciter',null);if(cur)$('#str').value=cur;$('#str').onchange=e=>{LS.set('reciter',e.target.value);toast('تم تغيير القارئ الافتراضي')};
+ $('#stp').value=LS.get('pmeth',5);$('#stp').onchange=e=>LS.set('pmeth',+e.target.value);
+ $('#stl').value=(window.AmalLang?AmalLang.get():'ar');$('#stl').onchange=e=>AmalLang.set(e.target.value);
+ const dl=async(urls)=>{const st=$('#offs');if(!('caches' in window)){st.textContent='المتصفح لا يدعم التخزين';return}let ok=0;for(const u of urls){try{const r=await fetch(u);if(r.ok){const c=await caches.open('amal-v10');await c.put(u,r);ok++}}catch(e){}st.textContent=AR(ok)+' / '+AR(urls.length)}st.textContent=AR(ok)+' من '+AR(urls.length)+' ملف تم تنزيله'+(ok<urls.length?' (بعضها فشل، أعد المحاولة)':'')};
+ $('#off1').onclick=()=>dl(['index.html','quran.html','surah.html','hadith.html','azkar.html','duas.html','quiz.html','tafsir.html','prophets.html','qisas.html','seerah.html','companions.html','fiqh.html','kids.html','newmuslim.html','library.html','names-of-allah.html','qibla.html','salah.html','hijri.html','favorites.html','settings.html','search.html','reciters.html','css/style.css','js/core.js','js/p3.js','js/p4.js','js/p5.js','js/p6.js','js/p7.js','data/mosques.js','videomaker.html','oldschool.html','data/old-egyptian.js','js/i18n.js','wallpapers.html','scholars.html','contact.html','report.html','data/scholars.js','data/quran.js','data/juz.js','data/tafsir-muyassar.js','data/adhkar.js','data/names.js','data/prophets.js','data/qisas.js','data/reciters.js','img/hero.jpg','data/hadith-index.js','data/hadith/nawawi-1.js','data/hadith/qudsi-1.js']);
+ $('#off2').onclick=async()=>{const HI=await loadScript('data/hadith-index.js','HINDEX');const L=[];Object.keys(HI).forEach(c=>HI[c].forEach(b=>L.push(`data/hadith/${c}-${b.b}.js`)));dl(L)};
+
+ {const g=(k,d)=>LS.get(k,d),pv=()=>{const e=$('#ts_pv'),h=document.documentElement;if(h.dataset.rf)e.style.fontFamily=getComputedStyle(h).getPropertyValue('--rf');else e.style.fontFamily="'Amiri',serif"};
+ $('#ts_z').value=g('tsz',1);$('#ts_zv').textContent=AR(Math.round($('#ts_z').value*100))+'٪';$('#ts_z').oninput=e=>{LS.set('tsz',+e.target.value);$('#ts_zv').textContent=AR(Math.round(e.target.value*100))+'٪';applyPrefs()};
+ $('#ts_f').value=g('rfont','');$('#ts_f').onchange=e=>{LS.set('rfont',e.target.value);applyPrefs();pv()};
+ $('#ts_l').value=g('rlh','');$('#ts_l').onchange=e=>{LS.set('rlh',e.target.value);applyPrefs()};
+ {const rm=g('rmot',null);$('#ts_m').checked=rm===null?matchMedia('(prefers-reduced-motion: reduce)').matches:rm}$('#ts_m').onchange=e=>{LS.set('rmot',e.target.checked);applyPrefs()};
+ $('#ts_k').checked=g('kawake',false);$('#ts_k').onchange=e=>{LS.set('kawake',e.target.checked);if(e.target.checked&&!('wakeLock' in navigator))toast('هذا المتصفح لا يدعم إبقاء الشاشة مضاءة');kaSync()};
+ $('#ts_a').checked=g('anext',true);$('#ts_a').onchange=e=>LS.set('anext',e.target.checked);
+ $('#ts_r').value=g('rep',0);$('#ts_r').onchange=e=>{LS.set('rep',+e.target.value);if(window.__amal)window.__amal.P.rep=+e.target.value;toast('تم الحفظ')};
+ $('#ts_s').value=String(g('prate',1));$('#ts_s').onchange=e=>{LS.set('prate',+e.target.value);const pr=$('#pRate');if(pr){pr.value=e.target.value;pr.onchange&&pr.onchange({target:pr})}toast('تم الحفظ')};
+ const RB={on:false,prayer:true,sal:true,every:30,snd:true,wake:false},rs=()=>({...RB,...g('rem',{})}),az=()=>({on:false,m:'05:30',e:'17:30',...g('azrem',{})});
+ $('#ts_ron').checked=rs().on;$('#ts_ron').onchange=e=>{LS.set('rem',{...rs(),on:e.target.checked});if(e.target.checked&&!g('remL',0))LS.set('remL',Date.now());toast(e.target.checked?'تم تشغيل التذكيرات':'تم إيقاف التذكيرات')};
+ $('#ts_aon').checked=az().on;$('#ts_am').value=az().m;$('#ts_ae').value=az().e;
+ $('#ts_aon').onchange=e=>LS.set('azrem',{...az(),on:e.target.checked});$('#ts_am').onchange=e=>LS.set('azrem',{...az(),m:e.target.value||'05:30'});$('#ts_ae').onchange=e=>LS.set('azrem',{...az(),e:e.target.value||'17:30'});
+ const ps=()=>{$('#ts_ps').textContent=window.Notification?'إذن الإشعارات: '+({granted:'مسموح',denied:'مرفوض (غيّره من إعدادات المتصفح)',default:'لم يُطلب بعد'}[Notification.permission]):'المتصفح لا يدعم الإشعارات'};ps();
+ $('#ts_perm').onclick=async()=>{if(!window.Notification){toast('غير مدعوم');return}await Notification.requestPermission();ps()};
+ $('#ts_res').checked=g('resume',false);$('#ts_res').onchange=e=>LS.set('resume',e.target.checked);
+ $('#ts_forget').onclick=()=>{['last','lastSurah','lastTime'].forEach(k=>localStorage.removeItem('amal_'+k));toast('تم نسيان موضع القراءة والتلاوة')};pv()}
+ $('#stx').onclick=()=>{const o={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.startsWith('amal_'))o[k]=localStorage.getItem(k)}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(o,null,1)],{type:'application/json'}));a.download='amal-data.json';a.click()};
+ $('#std').onclick=()=>{if(confirm('هل تريد مسح كل المفضلة والإعدادات والتقدم؟')){Object.keys(localStorage).filter(k=>k.startsWith('amal_')).forEach(k=>localStorage.removeItem(k));toast('تم المسح');API.route('settings.html',false)}}};
+
+/* ---------- topic pages built only from the site's own sourced hadith data ---------- */
+const HNOTE='النصوص المعروضة هي نصوص الأحاديث نفسها من قاعدة البيانات المصدرية (Hadith API، ترقيم المصدر) مع درجاتها حيث توفرت. عناوين الأبواب بالعربية في البخاري ومسلم ترجمتها المنصة عن أسماء المصدر الإنجليزية، فارجع إلى الطبعات المطبوعة. هذا فهرس للوصول إلى الأحاديث وليس فتوى ولا شرحًا.';
+const bl=(c,b,t)=>`<a class="btn sm" href="hadith.html?c=${c}&b=${b}">${esc(t)}</a>`;
+function topicPage(key,title,intro,groups){Pages[key]=async()=>{const HI=await loadScript('data/hadith-index.js','HINDEX');const nm=(c,b)=>{const x=HI[c].find(z=>z.b===b);return x?x.ar+' ('+AR(x.n)+')':null};
+ app.innerHTML=crumbs([[title]])+`<h2 class="sec">${title}</h2><div class="notice">${intro}<br>${HNOTE}</div>`+groups.map(g=>`<div class="card" style="margin:10px 0"><h3>${esc(g[0])}</h3><div class="toolbar" style="flex-wrap:wrap">${g[1].map(([c,b,l])=>{const n=nm(c,b);return n?bl(c,b,(l||'')+' '+(c==='bukhari'?'البخاري':'مسلم')+' · '+n):''}).join('')}</div></div>`).join('')};}
+topicPage('seerah','السيرة النبوية','أحاديث السيرة والمغازي والمناقب كما في الصحيحين.',[['بدء الوحي',[['bukhari',1,'']]],['المناقب (صفات النبي ﷺ وأخلاقه ودلائل نبوته)',[['bukhari',61,''],['muslim',43,'']]],['الهجرة وأحداث المدينة',[['bukhari',63,'']]],['المغازي',[['bukhari',64,'']]],['الجهاد والسير',[['bukhari',56,''],['muslim',32,'']]],['فرض الخمس والجزية والموادعة',[['bukhari',57,''],['bukhari',58,'']]]]);
+topicPage('companions','الصحابة','فضائل الصحابة رضي الله عنهم والأنصار كما في الصحيحين.',[['فضائل أصحاب النبي ﷺ',[['bukhari',62,''],['muslim',44,'']]],['مناقب الأنصار',[['bukhari',63,'']]]]);
+topicPage('fiqh','الفقه والعبادات','أبواب العبادات والمعاملات في الصحيحين. للأحكام التفصيلية والفتوى ارجع إلى أهل العلم والجهة الرسمية في بلدك.',[
+['الطهارة',[['bukhari',4,''],['bukhari',5,''],['bukhari',6,''],['bukhari',7,''],['muslim',2,''],['muslim',3,'']]],
+['الصلاة',[['bukhari',8,''],['bukhari',9,''],['bukhari',10,''],['bukhari',11,''],['bukhari',14,''],['bukhari',19,''],['muslim',4,''],['muslim',5,''],['muslim',6,''],['muslim',7,'']]],
+['الجنائز',[['bukhari',23,''],['muslim',11,'']]],
+['الزكاة',[['bukhari',24,''],['muslim',12,'']]],
+['الصيام والاعتكاف',[['bukhari',30,''],['bukhari',33,''],['muslim',13,''],['muslim',14,'']]],
+['الحج والعمرة',[['bukhari',25,''],['bukhari',26,''],['muslim',15,'']]],
+['العيدان والأضاحي',[['bukhari',13,''],['bukhari',73,''],['muslim',8,''],['muslim',35,'']]],
+['البيوع والمعاملات',[['bukhari',34,''],['muslim',21,''],['muslim',22,'']]],
+['النكاح والطلاق',[['bukhari',67,''],['bukhari',68,''],['muslim',16,''],['muslim',18,'']]],
+['الأطعمة والأشربة واللباس',[['bukhari',70,''],['bukhari',74,''],['bukhari',77,''],['muslim',36,''],['muslim',37,'']]],
+['الأدب والسلام',[['bukhari',78,''],['bukhari',79,''],['muslim',38,''],['muslim',39,''],['muslim',45,'']]],
+['الحدود والديات',[['bukhari',86,''],['bukhari',87,''],['muslim',28,''],['muslim',29,'']]]]);
+/* library: index of the sources actually built into the site */
+Pages.library=async()=>{app.innerHTML=crumbs([['المكتبة']])+`<h2 class="sec">المكتبة</h2><div class="notice">فهرس بالمصادر الموجودة فعلًا في الموقع، مع مصدر البيانات لكل منها.</div>
+ <div class="card" style="margin:10px 0"><h3>القرآن الكريم</h3><div class="muted">المصحف برواية حفص (Tanzil عبر api.alquran.cloud). <a href="quran.html">افتح</a></div></div>
+ <div class="card" style="margin:10px 0"><h3>كتب التفسير</h3><div class="muted">التفسير الميسر (مجمع الملك فهد)، تفسير السعدي، تفسير ابن كثير، تفسير الطبري (مستودع spa5k/tafsir_api). <a href="tafsir.html">افتح</a></div></div>
+ <div class="card" style="margin:10px 0"><h3>كتب الحديث</h3><div class="muted">صحيح البخاري، صحيح مسلم، سنن أبي داود، جامع الترمذي، سنن النسائي، سنن ابن ماجه، موطأ مالك، الأربعون النووية، الأربعون القدسية (Hadith API لـ fawazahmed0). <a href="hadith.html">افتح</a></div></div>
+ <div class="card" style="margin:10px 0"><h3>الأذكار والأدعية</h3><div class="muted">حصن المسلم (Adhkar-json) وأدعية قرآنية من نص المصحف. <a href="azkar.html">الأذكار</a> · <a href="duas.html">الأدعية</a></div></div>
+ <div class="card" style="margin:10px 0"><h3>قصص الأنبياء لابن كثير</h3><div class="muted">نص كتاب كامل (جزءان) من ويكي مصدر العربية، رخصة الترميز CC BY-SA 4.0. <a href="qisas.html">افتح</a></div></div>
+ <div class="card" style="margin:10px 0"><h3>أسماء الله الحسنى</h3><div class="muted">api.aladhan.com. <a href="names-of-allah.html">افتح</a></div></div>
+ <div class="muted" style="margin-top:10px">لا توجد كتب إضافية مضمّنة. أي كتاب يُضاف لاحقًا يلزم أن يكون له مصدر ورخصة موثقان.</div>`};
+/* prophets: verses + integrated tafsir + Bukhari "Ahadith al-Anbiya" */
+const P0=Pages.prophets;Pages.prophets=async(p)=>{await P0(p);const n=p.get('n');if(!n)return;const P=await loadScript('data/prophets.js','PROPHETS'),x=P.find(z=>z.name===n);if(!x)return;const Q=await needQ();const ss=[...new Set(x.refs.map(r=>r[0]))];
+ app.insertAdjacentHTML('beforeend',`<h3 class="sec">التفسير والأحاديث</h3><div class="card"><div class="muted">تفسير السور التي ورد فيها الاسم (الميسر والسعدي وابن كثير والطبري):</div><div class="toolbar" style="flex-wrap:wrap">${ss.map(s=>`<a class="btn sm" href="tafsir.html?s=${s}">${esc(Q[s-1].name)}</a>`).join('')}</div><div class="muted" style="margin-top:8px">أحاديث الأنبياء في صحيح البخاري (كتاب كامل، ابحث فيه باسم النبي): <a href="hadith.html?c=bukhari&b=60">أحاديث الأنبياء</a></div></div>`)};
+
+/* ---------- Qisas al-Anbiya by Ibn Kathir (Arabic Wikisource transcription, unedited) ---------- */
+async function qdata(){const Q=await loadScript('data/qisas.js','QISAS');const L=[];Q.forEach(pt=>pt.secs.forEach(sc=>L.push({t:sc.t,p:sc.p,part:pt})));return L}
+const QNOTE=(pt)=>`النص من كتاب «قصص الأنبياء» للحافظ ابن كثير (ت ٧٧٤هـ) كما نُسخ في ويكي مصدر العربية، دون أي تعديل من المنصة سوى تحويل تنسيق الويكي إلى نص. النسخ جهد متطوعين وقد يحوي أخطاء كتابية. الكتاب يذكر الأسانيد وبعض الإسرائيليات وينبّه المؤلف أحيانًا على ضعفها، فليس كل ما فيه ثابتًا. المصدر: <a href="https://ar.wikisource.org/wiki/${encodeURIComponent(pt.title.replace(/ /g,'_'))}" target="_blank" rel="noopener">${esc(pt.title)}</a> (نسخة ${pt.revid}) · رخصة الترميز CC BY-SA 4.0، والأصل من التراث المنشور.`;
+Pages.qisas=async(p)=>{const L=await qdata();const i=p.get('i');
+ app.innerHTML=crumbs([['قصص الأنبياء لابن كثير',i==null?null:'qisas.html'],...(i==null?[]:[[L[+i]?L[+i].t:'']])])+`<h2 class="sec">قصص الأنبياء لابن كثير</h2>`;
+ if(i==null||!L[+i]){app.insertAdjacentHTML('beforeend',`<div class="notice">${QNOTE(L[0].part)}</div>`+[1,2].map(n=>`<h3 class="sec">الجزء ${AR(n)}</h3><div class="toolbar" style="flex-wrap:wrap">${L.map((x,k)=>x.part.part===n&&x.t&&x.t!=='فصل'?`<a class="btn sm" href="qisas.html?i=${k}">${esc(x.t)}</a>`:'').join('')}</div>`).join(''));return}
+ const x=L[+i];app.insertAdjacentHTML('beforeend',`<div class="notice">${QNOTE(x.part)}</div><div class="card"><h3>${esc(x.t)}</h3>${x.p.map(t=>`<p style="font-family:Amiri,serif;font-size:1.25rem;line-height:2.2">${esc(t)}</p>`).join('')}</div><div class="toolbar">${+i>0?`<a class="btn" href="qisas.html?i=${+i-1}">السابق</a>`:''}${+i<L.length-1?`<a class="btn" href="qisas.html?i=${+i+1}">التالي</a>`:''}</div>`)};
+const P1=Pages.prophets;Pages.prophets=async(p)=>{await P1(p);const n=p.get('n');const L=await qdata();
+ if(!n){app.insertAdjacentHTML('beforeend','<div class="card" style="margin:12px 0"><b>قصص الأنبياء لابن كثير</b><div class="muted">نص كتاب كامل من ويكي مصدر دون تعديل. <a href="qisas.html">تصفح الفهرس</a></div></div>');return}
+ const names={'محمد':null,'يحيى':'يحيى','عيسى':'عيسى'};const key=n;const hits=L.map((x,k)=>[x,k]).filter(([x])=>x.t.includes(key)&&!/^فصل$/.test(x.t));
+ app.insertAdjacentHTML('beforeend',`<h3 class="sec">من قصص الأنبياء لابن كثير</h3><div class="card">${hits.length?`<div class="toolbar" style="flex-wrap:wrap">${hits.map(([x,k])=>`<a class="btn sm" href="qisas.html?i=${k}">${esc(x.t)}</a>`).join('')}</div>`:'<div class="muted">لا يوجد عنوان باسمه في هذا الكتاب. يمكنك تصفح <a href="qisas.html">الفهرس</a>.</div>'}</div>`)};
+
+/* ---------- kids / new Muslim: selections of sourced text already in the site (no text written by us) ---------- */
+const SELNOTE='الاختيار والتصنيف من المنصة فقط، أما النصوص فمنقولة كما هي من مصادرها داخل الموقع: القرآن (رواية حفص)، الأربعون النووية (لا يوفر المصدر درجة لكل حديث)، وحصن المسلم (دون تخريج لكل ذكر). لا يوجد شرح مبسّط لأننا لا نكتب محتوى ديني. اطلب من أهل العلم الشرح والتعليم.';
+const vbox=(Q,s,a)=>`<div class="card" style="margin:8px 0"><a href="surah.html?s=${s}&a=${a}#a${a}"><b>سورة ${esc(Q[s-1].name)} · آية ${AR(a)}</b></a><div style="font-family:Amiri,serif;font-size:1.4rem;line-height:2.2">${esc(Q[s-1].ayahs[a-1])}</div></div>`;
+const sbox=(Q,s)=>`<div class="card" style="margin:8px 0"><div class="toolbar"><b>سورة ${esc(Q[s-1].name)}</b><a class="btn sm" href="surah.html?s=${s}">اقرأ واستمع</a></div><div style="font-family:Amiri,serif;font-size:1.35rem;line-height:2.3">${Q[s-1].ayahs.map((t,i)=>esc(t)+' ﴿'+AR(i+1)+'﴾').join(' ')}</div></div>`;
+const hbox=(H,n)=>{const h=H.find(x=>x[0]===n);return h?`<div class="card" style="margin:8px 0"><a href="hadith.html?c=nawawi"><b>الأربعون النووية · حديث رقم ${AR(n)}</b></a><div style="font-family:Amiri,serif;font-size:1.3rem;line-height:2.2">${esc(h[1])}</div></div>`:''};
+const zbox=(A,id)=>{const c=A.find(x=>x.id===id);return c?`<div class="card" style="margin:8px 0"><b>${esc(c.cat)}</b>${c.items.map(it=>`<div style="font-family:Amiri,serif;font-size:1.25rem;line-height:2.2;margin-top:6px">${esc(it.t)}</div>`).join('')}<div class="muted">حصن المسلم</div></div>`:''};
+function selPage(key,title,intro,secs){Pages[key]=async()=>{const[Q,A,H]=await Promise.all([needQ(),loadScript('data/adhkar.js','ADHKAR'),loadScript('data/hadith/nawawi-1.js','H_nawawi_1')]);
+ app.innerHTML=crumbs([[title]])+`<h2 class="sec">${title}</h2><div class="notice">${intro}<br>${SELNOTE}</div>`+secs.map(([t,items])=>`<h3 class="sec">${t}</h3>`+items.map(([k,...a])=>k==='v'?vbox(Q,a[0],a[1]):k==='s'?sbox(Q,a[0]):k==='h'?hbox(H,a[0]):zbox(A,a[0])).join('')).join('')};}
+selPage('kids','ركن الأطفال','سور قصيرة وأحاديث وأذكار قصيرة للحفظ مع الأهل.',[['سور قصيرة للحفظ',[['s',1],['s',112],['s',113],['s',114],['s',108],['s',103]]],['أحاديث قصيرة',[['h',13],['h',16],['h',12],['h',18]]],['أذكار يومية',[['z',69],['z',70],['z',9],['z',8],['z',2],['z',3]]]]);
+selPage('newmuslim','المسلم الجديد','أساسيات الإسلام من نصوص القرآن والسنة الموجودة في الموقع.',[['الشهادتان وأركان الإسلام والإيمان',[['h',3],['h',2],['v',2,285],['s',112]]],['الفاتحة وآية الكرسي',[['s',1],['v',2,255]]],['الطهارة والصلاة',[['z',6],['z',7],['z',11],['z',12],['h',7]]],['للتوسع',[['v',2,177]]]]);
+/* gallery: Wikimedia Commons images, licence checked, attribution shown */
+const GAL=['المسجد الحرام','المسجد النبوي','المسجد الأقصى','قبة الصخرة','مسجد قباء','مسجد القبلتين','جامع الأزهر','مسجد السلطان أحمد','مسجد الحسن الثاني','مسجد الشيخ زايد الكبير','الكعبة','جبل النور'];
+const OKL=/^(CC BY|CC0|Public domain|PD|CC BY-SA)/i;
+async function gimg(t){const k='amal_g_'+t;try{const c=sessionStorage.getItem(k);if(c)return JSON.parse(c)}catch(e){}
+ const a=await (await fetch('https://ar.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=pageimages&piprop=name&titles='+encodeURIComponent(t))).json();
+ const pg=Object.values(a.query.pages)[0];if(!pg.pageimage)return null;const f='File:'+pg.pageimage;
+ const c=await (await fetch('https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&prop=imageinfo&iiprop=extmetadata|url&iiurlwidth=640&titles='+encodeURIComponent(f))).json();
+ const ii=Object.values(c.query.pages)[0].imageinfo;if(!ii)return null;const m=ii[0].extmetadata||{};const lic=(m.LicenseShortName||{}).value||'';if(!OKL.test(lic))return null;
+ const strip=s=>(s||'').replace(/<[^>]*>/g,'').trim();
+ const o={t:pg.title,src:ii[0].thumburl,page:ii[0].descriptionurl,lic,licurl:(m.LicenseUrl||{}).value||'',author:strip((m.Artist||{}).value)||'غير مذكور',file:pg.pageimage};try{sessionStorage.setItem(k,JSON.stringify(o))}catch(e){}return o}
+Pages.images=async()=>{app.innerHTML=crumbs([['معرض الصور']])+`<h2 class="sec">معرض الصور</h2><div class="notice">صور من ويكيميديا كومنز بتراخيص حرة (CC أو ملكية عامة) تُحمَّل مباشرة، ويُذكر المصور والترخيص تحت كل صورة. لا توجد آيات على الصور. الصور تتطلب اتصالًا بالإنترنت.</div><div class="grid" id="gl">جارٍ التحميل…</div>`;
+ const out=[];await Promise.all(GAL.map(async t=>{try{const o=await gimg(t);if(o)out[GAL.indexOf(t)]=o}catch(e){}}));const L=out.filter(Boolean);
+ $('#gl').innerHTML=L.length?L.map(o=>`<figure class="card" style="margin:0"><img src="${esc(o.src)}" alt="${esc(o.t)}" loading="lazy" style="width:100%;border-radius:10px;aspect-ratio:4/3;object-fit:cover"><figcaption><b>${esc(o.t)}</b><div class="muted" style="font-size:.8rem">تصوير: ${esc(o.author)} · <a href="${esc(o.licurl||o.page)}" target="_blank" rel="noopener">${esc(o.lic)}</a> · <a href="${esc(o.page)}" target="_blank" rel="noopener">صفحة الملف على كومنز</a></div></figcaption></figure>`).join(''):'<div class="notice">تعذر تحميل الصور. تحقق من الاتصال بالإنترنت.</div>'};
+};
