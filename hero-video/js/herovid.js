@@ -1,6 +1,7 @@
 // Full-screen video hero (user-supplied footage). Video fills the whole first screen.
 export async function initHero(root) {
-  const stage = (() => { const d = document.createElement('div'); d.id = 'vbg'; d.setAttribute('aria-hidden', 'true'); document.body.prepend(d); const sc = document.createElement('div'); sc.id = 'vscrim'; document.body.prepend(sc); document.body.prepend(d); return d; })(), btn = root.querySelector('.h3-mo');
+  const HERO = /[?&]mode=hero\b/.test(location.search);
+  const stage = (() => { const d = document.createElement('div'); d.id = 'vbg'; d.setAttribute('aria-hidden', 'true'); if (HERO) { root.prepend(d); document.body.classList.add('vidhero'); } else { document.body.prepend(d); const sc = document.createElement('div'); sc.id = 'vscrim'; document.body.prepend(sc); document.body.prepend(d); } return d; })(), btn = root.querySelector('.h3-mo');
   const bar = root.querySelector('.h3-bar i'), lab = root.querySelector('.h3-lab');
   document.body.classList.add('vidhome');
   const onScroll = () => document.body.classList.toggle('vscrolled', scrollY > innerHeight * 0.5);

@@ -186,16 +186,22 @@ body.vidhome .h3-mo{bottom:90px;inset-inline-start:14px}
 #vbg{position:fixed;inset:0;z-index:-2;background:#05060f center/cover no-repeat;overflow:hidden}
 #vbg video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 #vscrim{position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(8,6,22,.30) 0%,rgba(8,6,22,.45) 100%)}
-body.vidhome{background:transparent}
-html:has(body.vidhome){background:#05060f}
+body.vidhome:not(.vidhero){background:transparent}
+html:has(body.vidhome:not(.vidhero)){background:#05060f}
 body.vidhome section.herob.h3{background:transparent!important}
 body.vidhome .h3-stage{display:none}
 body.vidhome .h3-scrim{background:linear-gradient(180deg,rgba(8,6,22,.0) 0%,rgba(8,6,22,0) 55%,rgba(8,6,22,.35) 100%)}
 body.vidhome .h3-load{display:none!important}
 body.vidhome .h3-copy{text-shadow:0 2px 16px rgba(0,0,0,.85)}
-body.vidhome .tile,body.vidhome .panel,body.vidhome .sidec,body.vidhome footer#foot{backdrop-filter:blur(14px) saturate(1.1);-webkit-backdrop-filter:blur(14px) saturate(1.1);background:linear-gradient(160deg,rgba(40,22,84,.62),rgba(8,10,32,.72))}
-body.vidhome .tiles{padding:14px;border-radius:24px;background:rgba(8,6,22,.28);backdrop-filter:blur(8px)}
-body.vidhome .mini .page{color:#241a44}
+body.vidhome:not(.vidhero) .tile,body.vidhome:not(.vidhero) .panel,body.vidhome:not(.vidhero) .sidec,body.vidhome:not(.vidhero) footer#foot{backdrop-filter:blur(14px) saturate(1.1);-webkit-backdrop-filter:blur(14px) saturate(1.1);background:linear-gradient(160deg,rgba(40,22,84,.62),rgba(8,10,32,.72))}
+body.vidhome:not(.vidhero) .tiles{padding:14px;border-radius:24px;background:rgba(8,6,22,.28);backdrop-filter:blur(8px)}
+
 body.light.vidhome #vscrim{background:rgba(246,241,230,.72)}
 body.light.vidhome .tile,body.light.vidhome .panel,body.light.vidhome .sidec{background:rgba(255,255,255,.78)}
 @media(max-width:600px){#vbg video{object-position:55% 50%}body.vidhome .tiles{padding:8px}}
+
+/* mode=hero: video only inside the home hero, rest of page normal */
+body.vidhero #vbg{position:absolute;z-index:0}
+body.vidhero section.herob.h3{overflow:hidden}
+body.vidhero .h3-scrim{background:linear-gradient(180deg,rgba(8,6,22,.25) 0%,rgba(8,6,22,.1) 40%,rgba(8,6,22,.45) 75%,var(--bg,#0b1230) 100%)}
+body.vidhero .h3-copy,body.vidhero .h3-mo{z-index:3}
