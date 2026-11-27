@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://youssefjooaz09-byte.github.io/amal-liakhirtak/sitemap.xml
